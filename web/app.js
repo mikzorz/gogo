@@ -72,23 +72,29 @@ function draw_starpoints() {
 }
 
 function draw_hover_stone(pos) {
-  var rounded = snapToPoint(pos);
-  //clamp
-  rounded.x = clamp(rounded.x, padding, width-padding);
-  rounded.y = clamp(rounded.y, padding, height-padding);
+  var point = fromPixel(pos);
+  console.log(point);
+  if (inbounds(point)){
+    if (placed_stones[point.x][point.y] == null){
+      var rounded = toPoint(point);
+      //clamp
+      rounded.x = clamp(rounded.x, padding, width-padding);
+      rounded.y = clamp(rounded.y, padding, height-padding);
 
-  // stone hover
-  if (blackTurn) {
-    ctx.strokeStyle = 'rgba(32,32,32,0.5)';
-    ctx.fillStyle = 'rgba(32,32,32,0.5)';
-  } else {
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      // stone hover
+      if (blackTurn) {
+        ctx.strokeStyle = 'rgba(32,32,32,0.5)';
+        ctx.fillStyle = 'rgba(32,32,32,0.5)';
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      }
+      ctx.beginPath();
+      ctx.arc(rounded.x, rounded.y, stoneRadius, 0, 2*Math.PI);
+      ctx.stroke();
+      ctx.fill();
+    }
   }
-  ctx.beginPath();
-  ctx.arc(rounded.x, rounded.y, stoneRadius, 0, 2*Math.PI);
-  ctx.stroke();
-  ctx.fill();
 }
 
 function draw_placed_stones() {
@@ -132,12 +138,16 @@ function placeStone(e) {
   // stone in array of arrays = true, color = blah
   var pos = getMousePos(e);
   var point = fromPixel(pos);
-  if (blackTurn)
-    placed_stones[point.x][point.y] = "black";
-  else
-    placed_stones[point.x][point.y] = "white";
-  //console.log(placed_stones);
-  blackTurn = !blackTurn;
+  if (inbounds(point)) {
+    if (placed_stones[point.x][point.y] == null) {
+      if (blackTurn)
+        placed_stones[point.x][point.y] = "black";
+      else
+        placed_stones[point.x][point.y] = "white";
+      //console.log(placed_stones);
+      blackTurn = !blackTurn;
+    }
+  }
 }
 
 
@@ -147,6 +157,10 @@ function getMousePos(e) {
     x: e.clientX - rect.left,
     y: e.clientY - rect.top
   };
+}
+
+function inbounds(point) {
+  return point.x >= 0 && point.x < 19 && point.y >= 0 && point.y < 19;
 }
 
 function clamp(num, min, max) {
