@@ -73,7 +73,7 @@ function draw_starpoints() {
 
 function draw_hover_stone(pos) {
   var point = fromPixel(pos);
-  console.log(point);
+  //console.log(point);
   if (inbounds(point)){
     if (placed_stones[point.x][point.y] == null){
       var rounded = toPoint(point);
@@ -86,7 +86,8 @@ function draw_hover_stone(pos) {
         ctx.strokeStyle = 'rgba(32,32,32,0.5)';
         ctx.fillStyle = 'rgba(32,32,32,0.5)';
       } else {
-        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.strokeStyle = 'rgba(32,32,32,0.5)';
+        //ctx.strokeStyle = 'rgba(255,255,255,0.5)';
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
       }
       ctx.beginPath();
@@ -109,7 +110,8 @@ function draw_placed_stones() {
             ctx.fillStyle = 'rgba(32,32,32,1)';
             break;
           case "white":
-            ctx.strokeStyle = 'rgba(255,255,255,1)';
+            //ctx.strokeStyle = 'rgba(255,255,255,1)';
+            ctx.strokeStyle = 'rgba(32,32,32,1)';
             ctx.fillStyle = 'rgba(255,255,255,1)';
             break;
         }
