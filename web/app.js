@@ -20,6 +20,8 @@ console.log(placed_stones);
 
 var stoneRadius = padding/2;
 
+var blackTurn = true;
+
 draw_board();
 draw_lines();
 draw_starpoints();
@@ -28,7 +30,7 @@ function clear_board() {
   for (var i = 0; i < 19; i++){
     placed_stones[i] = [];
     for (var j = 0; j < 19; j++){
-      placed_stones[i][j] = false;
+      placed_stones[i][j] = null;
     }
   }
 }
@@ -76,8 +78,13 @@ function draw_hover_stone(pos) {
   rounded.y = clamp(rounded.y, padding, height-padding);
 
   // stone hover
-  ctx.strokeStyle = 'rgba(32,32,32,0.5)';
-  ctx.fillStyle = "rgba(32,32,32,0.5)";
+  if (blackTurn) {
+    ctx.strokeStyle = 'rgba(32,32,32,0.5)';
+    ctx.fillStyle = 'rgba(32,32,32,0.5)';
+  } else {
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  }
   ctx.beginPath();
   ctx.arc(rounded.x, rounded.y, stoneRadius, 0, 2*Math.PI);
   ctx.stroke();
@@ -87,16 +94,25 @@ function draw_hover_stone(pos) {
 function draw_placed_stones() {
   for (var i = 0; i < 19; i++){
     for (var j = 0; j < 19; j++){
-      if (placed_stones[i][j] == true) {
+      if (placed_stones[i][j] != null) {
         var pos = {x:i,y:j};
         pos = toPoint(pos);
-        ctx.strokeStyle = 'rgba(32,32,32,1)';
-        ctx.fillStyle = "rgba(32,32,32,1)";
+        switch (placed_stones[i][j]) {
+          case "black":
+            ctx.strokeStyle = 'rgba(32,32,32,1)';
+            ctx.fillStyle = 'rgba(32,32,32,1)';
+            break;
+          case "white":
+            ctx.strokeStyle = 'rgba(255,255,255,1)';
+            ctx.fillStyle = 'rgba(255,255,255,1)';
+            break;
+        }
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, stoneRadius, 0, 2*Math.PI);
         ctx.stroke();
         ctx.fill();
       }
+
     }
   }
 }
@@ -116,8 +132,12 @@ function placeStone(e) {
   // stone in array of arrays = true, color = blah
   var pos = getMousePos(e);
   var point = fromPixel(pos);
-  placed_stones[point.x][point.y] = true;
-  console.log(placed_stones);
+  if (blackTurn)
+    placed_stones[point.x][point.y] = "black";
+  else
+    placed_stones[point.x][point.y] = "white";
+  //console.log(placed_stones);
+  blackTurn = !blackTurn;
 }
 
 
