@@ -1,3 +1,17 @@
+//===== WEBSOCKET =====
+
+var ws = null;
+ws = new WebSocket('ws://' + window.location.host + '/ws');
+ws.addEventListener('message', function(e) {
+  console.log("Received move update from server")
+  var move = JSON.parse(e.data);
+  console.log(move);
+  // Add stone to board.
+  placedStones[move.x][move.y] = move.color;
+  console.log(placedStones);
+});
+
+
 //===== BOARD =======
 
 var board = document.getElementById('board');
@@ -13,27 +27,62 @@ var stars = [ [3,3], [3,9], [3,15],
               [9,3], [9,9], [9,15],
               [15,3],[15,9],[15,15] ];
 
-var placed_stones = [];
-console.log(placed_stones);
-clear_board();
-console.log(placed_stones);
+//=== STONES ===
 
 var stoneRadius = padding/2;
+var placedStones = [];
+clear_board();
+
+function clear_board() {
+  for (var i = 0; i < 19; i++){
+    placedStones[i] = [];
+    for (var j = 0; j < 19; j++){
+      placedStones[i][j] = null;
+    }
+  }
+}
+
+// Send a move request to the api
+function sendMove(e) {
+  /* ADD THIS TO SERVER
+  var pos = getMousePos(e);
+  var point = fromPixel(pos);
+  if (inbounds(point)) {
+    if (placedStones[point.x][point.y] == null) {
+      if (blackTurn)
+        placedStones[point.x][point.y] = "black";
+      else
+        placedStones[point.x][point.y] = "white";
+      //console.log(placedStones);
+
+      blackTurn = !blackTurn;
+    }
+  }
+  */
+  console.log("Sent move to server")
+  var pos = getMousePos(e);
+  var point = fromPixel(pos);
+  if (inbounds(point)) {
+    if (placedStones[point.x][point.y] == null) {
+      ws.send(
+        JSON.stringify({
+          x: point.x,
+          y: point.y
+        })
+      );
+    }
+  }
+}
+
+//===== OTHER =====
 
 var blackTurn = true;
+
+//===== DRAW ======
 
 draw_board();
 draw_lines();
 draw_starpoints();
-
-function clear_board() {
-  for (var i = 0; i < 19; i++){
-    placed_stones[i] = [];
-    for (var j = 0; j < 19; j++){
-      placed_stones[i][j] = null;
-    }
-  }
-}
 
 function draw_board() {
     // board bg
@@ -75,7 +124,7 @@ function draw_hover_stone(pos) {
   var point = fromPixel(pos);
   //console.log(point);
   if (inbounds(point)){
-    if (placed_stones[point.x][point.y] == null){
+    if (placedStones[point.x][point.y] == null){
       var rounded = toPoint(point);
       //clamp
       rounded.x = clamp(rounded.x, padding, width-padding);
@@ -98,13 +147,13 @@ function draw_hover_stone(pos) {
   }
 }
 
-function draw_placed_stones() {
+function draw_placedStones() {
   for (var i = 0; i < 19; i++){
     for (var j = 0; j < 19; j++){
-      if (placed_stones[i][j] != null) {
+      if (placedStones[i][j] != null) {
         var pos = {x:i,y:j};
         pos = toPoint(pos);
-        switch (placed_stones[i][j]) {
+        switch (placedStones[i][j]) {
           case "black":
             ctx.strokeStyle = 'rgba(32,32,32,1)';
             ctx.fillStyle = 'rgba(32,32,32,1)';
@@ -131,25 +180,8 @@ function draw(e) {
   draw_board();
   draw_lines();
   draw_starpoints();
-  draw_placed_stones();
+  draw_placedStones();
   draw_hover_stone(pos);
-}
-
-
-function placeStone(e) {
-  // stone in array of arrays = true, color = blah
-  var pos = getMousePos(e);
-  var point = fromPixel(pos);
-  if (inbounds(point)) {
-    if (placed_stones[point.x][point.y] == null) {
-      if (blackTurn)
-        placed_stones[point.x][point.y] = "black";
-      else
-        placed_stones[point.x][point.y] = "white";
-      //console.log(placed_stones);
-      blackTurn = !blackTurn;
-    }
-  }
 }
 
 
@@ -167,11 +199,6 @@ function inbounds(point) {
 
 function clamp(num, min, max) {
   return Math.min(Math.max(num, min), max);
-}
-
-function snapToPoint(pos) {
-  var newpos = fromPixel(pos);
-  return toPoint(newpos);
 }
 
 function fromPixel(pos) {
