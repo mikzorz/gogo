@@ -1,7 +1,13 @@
 //===== WEBSOCKET =====
+var apiUrl = window.location.protocol + "//" + window.location.host;
+console.log(apiUrl);
 
 var ws = null;
 ws = new WebSocket('ws://' + window.location.host + '/ws');
+
+// Send a request for current state.
+
+// Update game with each move.
 ws.addEventListener('message', function(e) {
   console.log("Received move update from server")
   var move = JSON.parse(e.data);
@@ -9,6 +15,8 @@ ws.addEventListener('message', function(e) {
   // Add stone to board.
   placedStones[move.x][move.y] = move.color;
   console.log(placedStones);
+  blackTurn = move.color == "black" ? false : true;
+  console.log(blackTurn);
 });
 
 
@@ -30,40 +38,30 @@ var stars = [ [3,3], [3,9], [3,15],
 //=== STONES ===
 
 var stoneRadius = padding/2;
-var placedStones = [];
-clear_board();
 
-function clear_board() {
-  for (var i = 0; i < 19; i++){
-    placedStones[i] = [];
-    for (var j = 0; j < 19; j++){
-      placedStones[i][j] = null;
-    }
-  }
+function loadGame(url) {
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.open("GET", url, false);
+  xmlHttp.send(null);
+  //console.log(JSON.parse(xmlHttp.responseText));
+  return JSON.parse(xmlHttp.responseText);
 }
+
+var game = loadGame(apiUrl + "/load");
+console.log(game);
+var placedStones = game.board;
+var blackTurn = game.turn % 2 == 0 ? false : true;
+console.log(game.turn % 2 == 0);
+
 
 // Send a move request to the api
 function sendMove(e) {
-  /* ADD THIS TO SERVER
+  // ADD THIS TO SERVER
   var pos = getMousePos(e);
   var point = fromPixel(pos);
   if (inbounds(point)) {
-    if (placedStones[point.x][point.y] == null) {
-      if (blackTurn)
-        placedStones[point.x][point.y] = "black";
-      else
-        placedStones[point.x][point.y] = "white";
-      //console.log(placedStones);
-
-      blackTurn = !blackTurn;
-    }
-  }
-  */
-  console.log("Sent move to server")
-  var pos = getMousePos(e);
-  var point = fromPixel(pos);
-  if (inbounds(point)) {
-    if (placedStones[point.x][point.y] == null) {
+    if (placedStones[point.x][point.y] == "") {
+      console.log("Sent move to server")
       ws.send(
         JSON.stringify({
           x: point.x,
@@ -76,13 +74,15 @@ function sendMove(e) {
 
 //===== OTHER =====
 
-var blackTurn = true;
+//var blackTurn = true;
 
 //===== DRAW ======
 
+// On game load.
 draw_board();
 draw_lines();
 draw_starpoints();
+draw_placedStones();
 
 function draw_board() {
     // board bg
@@ -124,7 +124,7 @@ function draw_hover_stone(pos) {
   var point = fromPixel(pos);
   //console.log(point);
   if (inbounds(point)){
-    if (placedStones[point.x][point.y] == null){
+    if (placedStones[point.x][point.y] == ""){
       var rounded = toPoint(point);
       //clamp
       rounded.x = clamp(rounded.x, padding, width-padding);
@@ -150,7 +150,7 @@ function draw_hover_stone(pos) {
 function draw_placedStones() {
   for (var i = 0; i < 19; i++){
     for (var j = 0; j < 19; j++){
-      if (placedStones[i][j] != null) {
+      if (placedStones[i][j] != "") {
         var pos = {x:i,y:j};
         pos = toPoint(pos);
         switch (placedStones[i][j]) {

@@ -5,6 +5,7 @@ import (
   "log"
   "net/http"
   "github.com/gorilla/websocket"
+  "encoding/json"
 )
 
 var clients = make(map[*websocket.Conn]bool)
@@ -13,10 +14,11 @@ var broadcast = make(chan Move)
 var upgrader = websocket.Upgrader{}
 
 type Game struct {
-  Board [19][19]string
+  Board [19][19]string `json:"board"`
+  Turn int `json:"turn"`
 }
 
-var currentMove = 1
+var game Game
 
 type Move struct {
   X int `json:"x"`
@@ -45,16 +47,19 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
   }
 }
 
+// Currently not checking if move is valid, nor saving the game.
 func handleMoves() {
   for {
     move := <- broadcast
     // temp
-    if currentMove % 2 == 1 {
+    if game.Turn % 2 == 1 {
       move.Color = "black"
     } else {
       move.Color = "white"
     }
-    currentMove += 1
+    game.Turn += 1
+
+    game.Board[move.X][move.Y] = move.Color
 
     fmt.Printf(`Player '%s' made a move at %d-%d.`, move.Color, move.X, move.Y)
     fmt.Printf("\n")
@@ -69,10 +74,17 @@ func handleMoves() {
   }
 }
 
+func loadGame(w http.ResponseWriter, r *http.Request) {
+  json.NewEncoder(w).Encode(game)
+}
+
 func main() {
+  game.Turn = 1
+
   fs := http.FileServer(http.Dir("web"))
   http.Handle("/", fs)
   http.HandleFunc("/ws", handleConnections)
+  http.HandleFunc("/load", loadGame)
 
   go handleMoves()
 
