@@ -74,7 +74,23 @@ func handleMoves() {
   }
 }
 
+func isMoveValid() {
+
+}
+
 func loadGame(w http.ResponseWriter, r *http.Request) {
+  json.NewEncoder(w).Encode(game)
+}
+
+func resetGame(w http.ResponseWriter, r *http.Request) {
+  for i := range game.Board {
+    for j := range game.Board[i] {
+      game.Board[i][j] = ""
+    }
+  }
+  game.Turn = 1
+  fmt.Println("Game reset")
+
   json.NewEncoder(w).Encode(game)
 }
 
@@ -85,6 +101,7 @@ func main() {
   http.Handle("/", fs)
   http.HandleFunc("/ws", handleConnections)
   http.HandleFunc("/load", loadGame)
+  http.HandleFunc("/reset", resetGame)
 
   go handleMoves()
 

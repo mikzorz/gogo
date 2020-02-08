@@ -214,3 +214,17 @@ function toPoint(pos) {
     y: ((pos.y *10) * sizeMulti) + padding
   }
 }
+
+// temp
+
+function resetGame(event) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", apiUrl + "/reset", false);
+    xmlHttp.send(null);
+    //console.log(JSON.parse(xmlHttp.responseText));
+    game = JSON.parse(xmlHttp.responseText);
+
+    placedStones = game.board;
+    blackTurn = game.turn % 2 == 0 ? false : true;
+    draw(event);
+}
