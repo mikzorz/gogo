@@ -51,9 +51,12 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 func handleMoves() {
   for {
     move := <- broadcast
+    if isMoveValid(move) {
+      placeStone(&move)
+      fmt.Printf(`Player '%s' made a move at %d-%d.`, move.Color, move.X, move.Y)
+      fmt.Printf("\n")
+    }
 
-    fmt.Printf(`Player '%s' made a move at %d-%d.`, move.Color, move.X, move.Y)
-    fmt.Printf("\n")
     for client := range clients {
       err := client.WriteJSON(move)
       if err != nil {
@@ -65,8 +68,9 @@ func handleMoves() {
   }
 }
 
+// Turn into struct methods?
 func isMoveValid(m Move) bool {
-  // doesn't check for illegal moves
+  // doesn't check for illegal moves or whose turn it is
   if m.X < 0 || m.X >= 19 || m.Y < 0 || m.Y >= 19 {
     return false
   }
@@ -76,7 +80,7 @@ func isMoveValid(m Move) bool {
   return true
 }
 
-func placeStone(m Move) {
+func placeStone(m *Move) {
   // simple, doesn't check for captures
   if game.Turn % 2 == 1 {
     m.Color = "black"
@@ -84,7 +88,6 @@ func placeStone(m Move) {
     m.Color = "white"
   }
   game.Turn += 1
-
   game.Board[m.X][m.Y] = m.Color
 }
 

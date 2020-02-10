@@ -24,7 +24,7 @@ func TestValidMove(t *testing.T) {
       t.Errorf("isMoveValid(%v) == %t, want %t", c.move, got, c.valid)
     }
     if got {
-      placeStone(c.move)
+      placeStone(&c.move)
     }
   }
 }
