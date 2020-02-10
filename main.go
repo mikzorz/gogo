@@ -47,19 +47,10 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
   }
 }
 
-// Currently not checking if move is valid, nor saving the game.
+// Currently not checking if move is valid, nor saving the game to storage.
 func handleMoves() {
   for {
     move := <- broadcast
-    // temp
-    if game.Turn % 2 == 1 {
-      move.Color = "black"
-    } else {
-      move.Color = "white"
-    }
-    game.Turn += 1
-
-    game.Board[move.X][move.Y] = move.Color
 
     fmt.Printf(`Player '%s' made a move at %d-%d.`, move.Color, move.X, move.Y)
     fmt.Printf("\n")
@@ -74,8 +65,27 @@ func handleMoves() {
   }
 }
 
-func isMoveValid() {
+func isMoveValid(m Move) bool {
+  // doesn't check for illegal moves
+  if m.X < 0 || m.X >= 19 || m.Y < 0 || m.Y >= 19 {
+    return false
+  }
+  if game.Board[m.X][m.Y] != "" {
+    return false
+  }
+  return true
+}
 
+func placeStone(m Move) {
+  // simple, doesn't check for captures
+  if game.Turn % 2 == 1 {
+    m.Color = "black"
+  } else {
+    m.Color = "white"
+  }
+  game.Turn += 1
+
+  game.Board[m.X][m.Y] = m.Color
 }
 
 func loadGame(w http.ResponseWriter, r *http.Request) {
